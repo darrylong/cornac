@@ -36,9 +36,9 @@ class GCMC(Recommender):
         self.U = self.init_params.get("U", None)
         self.V = self.init_params.get("V", None)
 
-    def _init(self):
+    def _init(self, n_users, n_items):
         rng = get_rng(self.seed)
-        n_users, n_items = self.train_set.num_users, self.train_set.num_items
+        # n_users, n_items = self.train_set.num_users, self.train_set.num_items
 
         if self.U is None:
             self.U = xavier_uniform((n_users, self.k), rng)
@@ -62,14 +62,14 @@ class GCMC(Recommender):
         """
         Recommender.fit(self, train_set, val_set)
 
-        self._init()
+        self._init(n_users=train_set.total_users, n_items=train_set.total_items)
 
         if self.trainable:
-            self._fit_gcmc()
+            self._fit_torch()
 
         return self
 
-    def _fit_gcmc(self):
+    def _fit_torch(self):
         import torch
         from .gcmc import GCEncoder
 
@@ -79,10 +79,6 @@ class GCMC(Recommender):
             if (self.use_gpu and torch.cuda.is_available())
             else torch.device("cpu")
         }
-
-
-
-
 
 
 

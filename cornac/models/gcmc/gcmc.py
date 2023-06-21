@@ -139,19 +139,55 @@ class GCEncoder(nn.Module):
         i_feat = self.ufc(i_feat)
         return self.out_act(u_feat), self.out_act(i_feat)
 
-        pass
-
 class BiDecoder(nn.Module):
-    def __init__(self, in_units, num_classes, num_basis=2, dropout_rate=0.0):
-        pass
+    def __init__(self, input_units, num_classes, num_basis=2, dropout_rate=0.0):
+        super(BiDecoder, self).__init__()
+        self._num_basis = num_basis
+        self.dropout = nn.Dropout(dropout_rate)
+        self.Ps = nn.ParameterList(
+            nn.Parameter(torch.randn(input_units, input_units)) for _ in range(num_basis)
+        )
+        self.combine_basis = nn.Linear(self._num_basis, num_classes, bias=False)
+        self.reset_parameters()
 
+    def reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
-        
+    def forward(self, graph u_feat, i_feat):
+        with graph.local_scope:
+            u_feat = self.dropout(u_feat)
+            i_feat = self.dropout(i_feat)
+            graph.node["item"].data["h"] = i_feat
+            basis_outputs = []
+            for i in range(self._num_basis):
+                graph.nodes["user"].data["h"] = u_feat @ self.Ps[i]
+                graph.apply_edges(fn.u_dot_v("h", "h", "score"))
+                basis_outputs.append(graph.edata["score"])
+            basis_outputs = torch.cat(basis_outputs, dim=1)
+            return self.combine_basis(basis_outputs)
 
+class DenseBiDecoder(nn.Module):
+    def __init__(self, input_units, num_classes, num_basis=2, dropout_rate=0.0):
+        super(DenseBiDecoder, self).__init__()
+        self._num_basis = num_basis
+        self.dropout = nn.Dropout(dropout_rate)
+        self.P = nn.Parameter(torch.randn(num_basis, input_units, input_units))
+        self.combine_basis = nn.Linear(self._num_basis, num_classes, bias=False)
+        self.reset_parameters()
 
-
-
-        
+    def reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+    
+    def forward(self, u_feat, i_feat):
+        u_feat = self.dropout(u_feat)
+        i_feat = self.dropout(i_feat)
+        out = torch.einsum("ai,bij,aj->ab", u_feat, self.P, i_feat)
+        out = self.combine_basis(out)
+        return out
 
 def dot_or_identity(A, B, device=None):
     if A is None:

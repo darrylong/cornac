@@ -15,12 +15,13 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+# import pydata_sphinx_theme
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'Cornac'
-copyright = '2018, Cornac Authors'
+copyright = '2023, Cornac Authors'
 author = 'Preferred.AI'
 
 # The short X.Y version
@@ -49,6 +50,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
+    'sphinx_design'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,7 +70,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -84,7 +86,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -165,9 +167,20 @@ texinfo_documents = [
 ]
 
 
-# -- Extension configuration -------------------------------------------------
-
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# -- Internationalization ----------------------------------------------------
+
+# specifying the natural language populates some key tags
+language = "en"
+
+# -- MyST options ------------------------------------------------------------
+
+# This allows us to use ::: to denote directives, useful for admonitions
+myst_enable_extensions = ["colon_fence", "linkify", "substitution"]
+myst_heading_anchors = 2
+myst_substitutions = {"rtd": "[Read the Docs](https://readthedocs.org/)"}
+
